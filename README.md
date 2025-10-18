@@ -110,7 +110,7 @@ npm run dev
 
 ## 🧩 API Endpoints Summary
 - **Auth**
-  - **POST** `/api/auth/register` — Register a new user(not used in current version)
+  - **POST** `/api/auth/register` — Register a new user (not used in current version)
   - **POST** `/api/auth/login` — Login and receive JWT
 - **Users**
   - **GET** `/api/users` — List all users
@@ -135,6 +135,8 @@ npm run dev
   - **POST** `/api/admin/users` — Create user
 - **AI User Stories (Bonus)**
   - **POST** `/api/ai/generate-user-stories` — Generate User Stories from GROQ API
+
+> For more info on the API, visit [Swagger API Docs](https://apidevpilot.hubzero.in/api-docs/) or check out `DevPilot API.postman_collection.json`
 
 ---
 
