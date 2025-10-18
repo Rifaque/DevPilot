@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
+const { authMiddleware } = require('./middleware/auth');
 
 const prisma = new PrismaClient();
 const app = express();
@@ -11,6 +12,7 @@ app.use(express.json());
 app.get('/api/health', (req, res) => res.json({ ok: true, name: 'DevPilot API' }));
 
 // Routes
+app.use('/api/admin', require('./routes/admin'));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/tasks', require('./routes/tasks'));

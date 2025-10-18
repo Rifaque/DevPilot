@@ -1,62 +1,61 @@
-'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import styles from './Login.module.css';
-import { saveToken } from '../../lib/auth';
+"use client";
 
-const API = process.env.NEXT_PUBLIC_API_BASE;
+import { useState } from "react";
+import { signIn } from "next-auth/react";
+import styles from "./Login.module.css";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [err, setErr] = useState('');
-  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  async function submit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setErr('');
-    try {
-      const res = await fetch(`${API}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setErr(data.error || 'Login failed');
-        return;
-      }
-      saveToken(data.token);
-      router.push('/');
-    } catch (e) {
-      setErr('Network error');
+    setError("");
+
+    const res = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (res?.error) {
+      setError("Invalid credentials");
+      return;
     }
-  }
+
+    window.location.href = "/dashboard"; // redirect after login
+  };
 
   return (
-    <div className="container">
-      <div className={styles.card}>
-        <h1>Sign in</h1>
-        <form onSubmit={submit}>
-          <label className={styles.formLabel}>Email</label>
-          <input
-            className={styles.formInput}
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="admin@devpilot.local"
-          />
-          <label className={styles.formLabel}>Password</label>
-          <input
-            type="password"
-            className={styles.formInput}
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="password123"
-          />
-          {err && <p className={styles.err}>{err}</p>}
-          <button className={styles.btn}>Sign in</button>
-        </form>
-      </div>
+    <div className={styles.container}>
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <h1 className={styles.title}>Login to DevPilot</h1>
+
+        {error && <p className={styles.error}>{error}</p>}
+
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className={styles.input}
+          required
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className={styles.input}
+          required
+        />
+
+        <button type="submit" className={styles.button}>
+          Login
+        </button>
+      </form>
     </div>
   );
 }
