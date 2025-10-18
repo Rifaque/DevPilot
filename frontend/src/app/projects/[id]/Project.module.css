@@ -1,0 +1,5 @@
+.header { margin-bottom:18px; }
+.newTask form { display:flex; gap:8px; margin-bottom:12px; }
+.newTask input { flex:1; padding:8px; border:1px solid #e5e7eb; border-radius:8px; }
+.newTask button { padding:8px 12px; background:#111827; color:#fff; border-radius:8px; border:none; cursor:pointer;}
+.tasks { display:flex; flex-direction:column; gap:10px; margin-top:10px; }
