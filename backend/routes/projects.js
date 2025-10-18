@@ -1,10 +1,16 @@
 const express = require('express');
 const router = express.Router();
+const { authMiddleware, requireRole } = require('../middleware/auth');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+router.use(authMiddleware);
+
 // Create a project
 router.post('/', async (req, res) => {
+  if (req.user.role !== 'MANAGER' && req.user.role !== 'ADMIN') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
   try {
     const { name, description, startDate, endDate } = req.body;
     const project = await prisma.project.create({
@@ -20,7 +26,13 @@ router.post('/', async (req, res) => {
 // List all projects
 router.get('/', async (req, res) => {
   try {
+    const userId = req.user.id;
     const projects = await prisma.project.findMany({
+      where: {
+        members: {
+          some: { userId: userId }
+        }
+      },
       include: { members: { include: { user: true } }, tasks: true }
     });
     res.json(projects);
@@ -36,7 +48,7 @@ router.get('/:id', async (req, res) => {
     const id = parseInt(req.params.id);
     const project = await prisma.project.findUnique({
       where: { id },
-      include: { members: { include: { user: true } }, tasks: { include: { assignee: true } } }
+      include: { members: { include: { user: true } }, tasks: { include: { assignee: true } }, userStories: true}
     });
     if (!project) return res.status(404).json({ error: 'Not found' });
     res.json(project);
@@ -52,7 +64,7 @@ router.post('/:id/members', async (req, res) => {
     const projectId = parseInt(req.params.id);
     const { userId, role } = req.body;
     const pm = await prisma.projectMember.create({
-      data: { projectId, userId, role: role || 'Developer' }
+      data: { projectId, userId: parseInt(userId), role: role || 'Developer' }
     });
     res.status(201).json(pm);
   } catch (err) {

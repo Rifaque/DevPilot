@@ -46,8 +46,6 @@ async function main() {
       { title: 'Build frontend scaffold', description: 'Next.js app with CSS modules', status: 'TODO', projectId: project.id, assigneeId: dev.id, dueDate: new Date(Date.now() + 7*24*3600*1000) }
     ]
   });
-
-  console.log('Seed completed');
 }
 
 main()

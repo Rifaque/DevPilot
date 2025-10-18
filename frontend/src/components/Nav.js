@@ -1,20 +1,11 @@
 'use client';
+import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import styles from './Nav.module.css';
-import { getToken, clearToken } from '../lib/auth';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 
 export default function Nav() {
-  const router = useRouter();
-  const [token, setToken] = useState(null);
-
-  useEffect(()=> setToken(getToken()), []);
-
-  function handleLogout() {
-    clearToken();
-    router.push('/login');
-  }
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
 
   return (
     <nav className={styles.nav}>
@@ -23,10 +14,13 @@ export default function Nav() {
       </div>
 
       <div className={styles.right}>
-        <Link href="/projects">Projects</Link>
-        <Link href="/admin/dashboard">Admin</Link>
-        {token ? (
-          <button onClick={handleLogout} className={styles.logout}>Logout</button>
+
+        {userRole === 'ADMIN' && <Link href="/admin/dashboard">Admin</Link>}
+
+        {session ? (
+          <button onClick={() => signOut({ callbackUrl: '/login' })} className={styles.logout}>
+            Logout
+          </button>
         ) : (
           <Link href="/login">Login</Link>
         )}

@@ -2,9 +2,15 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { authMiddleware, requireRole } = require('../middleware/auth');
+
+router.use(authMiddleware);
 
 // Create a task under project
 router.post('/:projectId/tasks', async (req, res) => {
+  if (req.user.role !== 'MANAGER' && req.user.role !== 'ADMIN') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
   try {
     const projectId = parseInt(req.params.projectId);
     const { title, description, assigneeId, dueDate } = req.body;
@@ -13,7 +19,7 @@ router.post('/:projectId/tasks', async (req, res) => {
         title,
         description,
         projectId,
-        assigneeId: assigneeId || null,
+        assigneeId: parseInt(assigneeId) || null,
         dueDate: dueDate ? new Date(dueDate) : null
       }
     });
@@ -47,7 +53,7 @@ router.put('/task/:taskId', async (req, res) => {
         title,
         description,
         status,
-        assigneeId,
+        assigneeId: parseInt(assigneeId) || null,
         dueDate: dueDate ? new Date(dueDate) : undefined
       }
     });
@@ -60,6 +66,9 @@ router.put('/task/:taskId', async (req, res) => {
 
 // Delete a task
 router.delete('/task/:taskId', async (req, res) => {
+  if (req.user.role !== 'MANAGER' && req.user.role !== 'ADMIN') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
   try {
     const taskId = parseInt(req.params.taskId);
     await prisma.task.delete({ where: { id: taskId }});

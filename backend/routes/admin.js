@@ -1,15 +1,13 @@
-// backend/routes/admin.js
 const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { authMiddleware, requireRole } = require('../middleware/auth');
+const bcrypt = require('bcryptjs');
 
-// All admin routes require auth + admin role
 router.use(authMiddleware);
 router.use(requireRole('ADMIN'));
 
-// 1) Site metrics: projects count, tasks by status, overdue tasks, users count
 router.get('/metrics', async (req, res) => {
   try {
     const totalProjects = await prisma.project.count();
@@ -29,7 +27,6 @@ router.get('/metrics', async (req, res) => {
   }
 });
 
-// 2) Users list (with role)
 router.get('/users', async (req, res) => {
   try {
     const users = await prisma.user.findMany({ select: { id: true, name: true, email: true, role: true, createdAt: true }});
@@ -40,7 +37,6 @@ router.get('/users', async (req, res) => {
   }
 });
 
-// 3) Update user role
 router.put('/users/:id/role', async (req, res) => {
   try {
     const id = parseInt(req.params.id);
@@ -54,11 +50,9 @@ router.put('/users/:id/role', async (req, res) => {
   }
 });
 
-// 4) Delete a user
 router.delete('/users/:id', async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    // optional: prevent self-delete
     if (req.user.id === id) return res.status(400).json({ error: "Can't delete yourself" });
 
     await prisma.user.delete({ where: { id }});
@@ -69,7 +63,6 @@ router.delete('/users/:id', async (req, res) => {
   }
 });
 
-// 5) Admin can get global tasks (with filters)
 router.get('/tasks', async (req, res) => {
   try {
     const { status, overdue } = req.query;
@@ -78,6 +71,30 @@ router.get('/tasks', async (req, res) => {
     if (overdue === 'true') where.dueDate = { lt: new Date() }, where.status = { not: 'DONE' };
     const tasks = await prisma.task.findMany({ where, include: { assignee: true, project: true }});
     res.json(tasks);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.post('/users', async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ error: 'name, email, password, and role required' });
+    }
+
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) return res.status(400).json({ error: 'User with this email already exists' });
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = await prisma.user.create({
+      data: { name, email, role, passwordHash },
+      select: { id: true, name: true, email: true, role: true, createdAt: true }
+    });
+
+    res.status(201).json(user);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const morgan = require('morgan');
 const { PrismaClient } = require('@prisma/client');
 const { authMiddleware } = require('./middleware/auth');
 
@@ -9,9 +10,28 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+morgan.token('body', (req) => {
+  if (req.method === 'GET') return ''; // Skip GET body
+  try {
+    return JSON.stringify(req.body);
+  } catch {
+    return '[unloggable body]';
+  }
+});
+
+// ✅ Log format: method, url, status, response time, and body
+app.use(
+  morgan(':method :url :status :response-time ms - :body', {
+    skip: (req) => req.originalUrl === '/api/health', // optionally skip health checks
+  })
+);
+
+
+
 app.get('/api/health', (req, res) => res.json({ ok: true, name: 'DevPilot API' }));
 
 // Routes
+app.use('/api/users', require('./routes/users'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/projects', require('./routes/projects'));
