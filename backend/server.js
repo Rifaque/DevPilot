@@ -10,23 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-morgan.token('body', (req) => {
-  if (req.method === 'GET') return ''; // Skip GET body
-  try {
-    return JSON.stringify(req.body);
-  } catch {
-    return '[unloggable body]';
-  }
-});
-
-// ✅ Log format: method, url, status, response time, and body
-app.use(
-  morgan(':method :url :status :response-time ms - :body', {
-    skip: (req) => req.originalUrl === '/api/health', // optionally skip health checks
-  })
-);
-
-
+app.use(morgan('common'));
 
 app.get('/api/health', (req, res) => res.json({ ok: true, name: 'DevPilot API' }));
 

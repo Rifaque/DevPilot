@@ -9,7 +9,7 @@ const groq = new Groq({ apiKey: GROQ_KEY });
 
 router.post('/generate-user-stories', async (req, res) => {
   try {
-    const { projectId, projectDescription, maxStories = 8 } = req.body;
+    const { projectId, projectDescription, maxStories = 3 } = req.body;
     if (!projectDescription) return res.status(400).json({ error: 'projectDescription required' });
 
     let storiesText = '';

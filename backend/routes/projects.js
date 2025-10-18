@@ -27,20 +27,25 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const userId = req.user.id;
+    const userRole = req.user.role;
+
     const projects = await prisma.project.findMany({
-      where: {
-        members: {
-          some: { userId: userId }
-        }
+      where: userRole === 'ADMIN'
+        ? {}
+        : { members: { some: { userId } } },
+      include: {
+        members: { include: { user: true } },
+        tasks: true,
       },
-      include: { members: { include: { user: true } }, tasks: true }
     });
+
     res.json(projects);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 });
+
 
 // Get a specific project's detail
 router.get('/:id', async (req, res) => {
@@ -72,6 +77,34 @@ router.post('/:id/members', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// Delete a project
+router.delete('/:id', async (req, res) => {
+  if (req.user.role !== 'MANAGER' && req.user.role !== 'ADMIN') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  try {
+    const id = parseInt(req.params.id);
+
+    const project = await prisma.project.findUnique({ where: { id } });
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    await prisma.projectMember.deleteMany({ where: { projectId: id } });
+    await prisma.task.deleteMany({ where: { projectId: id } });
+    await prisma.userStory.deleteMany({ where: { projectId: id } });
+
+    await prisma.project.delete({ where: { id } });
+
+    res.json({ message: 'Project deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 
 router.get('/:id/metrics', async (req, res) => {
   try {

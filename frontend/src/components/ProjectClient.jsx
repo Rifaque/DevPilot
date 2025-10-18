@@ -328,7 +328,7 @@ export default function ProjectClient({ projectId }) {
           body: JSON.stringify({
             projectId,
             projectDescription: project.description,
-            maxStories: 5,
+            maxStories: 3,
           }),
         }
       );
@@ -401,7 +401,7 @@ export default function ProjectClient({ projectId }) {
         <h2 className={styles.tasksTitle}>Tasks</h2>
         <div className={styles.tasksGrid}>
           {tasks.length === 0 ? (
-            <p className="text-gray-500">No tasks yet.</p>
+            <p style={{ color: '#6b7280', fontWeight: 500 }}>No tasks yet.</p>
           ) : (
             tasks.map((t) => {
               const assignedToMe = t.assignee?.id === session?.user?.id;
@@ -613,7 +613,7 @@ export default function ProjectClient({ projectId }) {
         {storyError && <p className={styles.storyError}>Error: {storyError}</p>}
 
         <ul className={styles.storiesList}>
-          {userStories.slice(-5).map((s) => (
+          {userStories.slice(-3).map((s) => (
             <li key={s.id} className={styles.storyItem}>
               {s.text}
             </li>
