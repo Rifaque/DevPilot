@@ -20,7 +20,6 @@ DevPilot is split into **frontend** and **backend**, deployed separately for fle
 - Runs on my **personal laptop server** (Ubuntu) hosting:
   - PostgreSQL database
   - Node.js backend
-  - Optional services (Prisma migrations, Plex, Home Assistant, etc.)
 - Exposed to the internet using **Cloudflare Tunnel**:
   - Secure public URL for your local server
   - Acts as a reverse proxy
